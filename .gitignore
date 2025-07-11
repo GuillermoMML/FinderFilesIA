@@ -1,0 +1,32 @@
+# Entorno virtual
+venv/
+env/
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración de VSCode (opcional)
+.vscode/
+
+# Datos locales
+data/
+metadata/keywords.json
+
+# Salidas generadas automáticamente
+*.zip
+*.docx
+*.odt
+*.pdf
+
+# Archivos de logs o debug
+*.log
+
+# Bases de datos temporales
+*.db
+*.sqlite3
+
+# Modelos descargados
+sentence_transformers/
