@@ -11,6 +11,8 @@ from nltk.corpus import wordnet as wn
 import numpy as np
 
 
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
 # ======== Funciones de extracción =======
 
 def normalizar(texto):
@@ -97,23 +99,18 @@ def extract_text_from_docs(folder):
 
     return docs, filenames
 
-def main(debug=False):
+
+# ======== Función principal de búsqueda ======= 
+def buscar_documentos(query: str):
     folder = "data"
     keywords = load_keywords()
     docs, filenames = extract_text_from_docs(folder)
 
     if not docs:
-        print("No se encontraron documentos en la carpeta.")
-        return
+        return []
 
-    print(f"Se cargaron {len(docs)} documentos.")
-
-    model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    query = normalizar(input("🔎 Introduce tu búsqueda: ").strip())
+    query = normalizar(query.strip())
     total_query_terms = expand_query_with_wordnet(query)
-
-    print(f"🧠 Términos expandidos: {', '.join(sorted(total_query_terms))}")
-
     query_embedding = model.encode(query, convert_to_tensor=True)
     doc_embeddings = model.encode(docs, convert_to_tensor=True)
 
@@ -126,41 +123,21 @@ def main(debug=False):
         elif isinstance(kw, list):
             kw = [normalizar(k) for k in kw]
         else:
-            kw = []       
-
-        print(f"{filename} → keywords: {kw}")
-
-            
+            kw = []
 
         coincidencias = len(set(kw) & total_query_terms)
         score_ia = float(util.cos_sim(query_embedding, doc_embeddings[i])[0])
-
-        # Ponderación: 1 punto por coincidencia + IA * 0.8
         puntuacion_total = coincidencias * 1.0 + score_ia * 0.8
 
         resultados.append({
             "filename": filename,
-            "text": docs[i],
-            "kw_matches": coincidencias,
-            "score_ia": score_ia,
-            "score_total": puntuacion_total
+            "puntuacion_total": round(puntuacion_total, 4),
+            "coincidencias_keywords": coincidencias,
+            "score_ia": round(score_ia, 4)
         })
 
-    # Ordenar por puntuación combinada
-    resultados.sort(key=lambda r: r["score_total"], reverse=True)
-
-    print("\n📄 Resultados más relevantes:")
-    for r in resultados[:5]:
-        print(f"\n🗂️ Documento: {r['filename']}")
-        print(f"🔢 Puntuación total: {r['score_total']:.4f}")
-        print(f"   ↳ Coincidencias keywords: {r['kw_matches']} | Relevancia IA: {r['score_ia']:.4f}")
-        if debug:
-            print("📌 Fragmento del contenido:")
-            fragment = r["text"][:300].replace('\n', ' ')
-            print(f"   {fragment}...")
-
-if __name__ == "__main__":
-    main(debug=False)
+    resultados.sort(key=lambda r: r["puntuacion_total"], reverse=True)
+    return resultados[:5]
 
 
     

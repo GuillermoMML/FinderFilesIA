@@ -5,8 +5,8 @@ env/
 # Archivos temporales de Python
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
+venv/
+.DS_Store
 
 # Archivos de configuración de VSCode (opcional)
 .vscode/
